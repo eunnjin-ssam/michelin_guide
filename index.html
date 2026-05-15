@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>어울림 미슐랭 가이드 — 교사 화면</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --beige:#fdf6e8;
+    --beige-deep:#f4e7c6;
+    --brown:#7a4a23;
+    --brown-soft:#a47148;
+    --gold:#c69b3a;
+    --gold-deep:#a98028;
+    --red:#c8442a;
+    --black:#2b2b2b;
+    --line:#7a4a23;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh;
+    font-family:'Gowun Dodum', sans-serif;
+    background:var(--beige); color:var(--black);
+    padding:20px;
+  }
+  .wrap{max-width:1100px; margin:0 auto;}
+  header{text-align:center; margin-bottom:18px;}
+  .tag{
+    display:inline-block; font-size:13px; padding:5px 14px;
+    background:var(--brown); color:#fff8e1; border-radius:20px;
+  }
+  h1{
+    font-family:'Jua', sans-serif; font-size:42px;
+    margin:10px 0 4px; color:var(--brown); letter-spacing:-1px;
+  }
+  h1 .star{color:var(--gold);}
+  .subtitle{font-size:14px; color:var(--brown-soft);}
+  .phase-bar{
+    display:flex; gap:8px; justify-content:center; margin:18px 0;
+    flex-wrap:wrap;
+  }
+  .phase-btn{
+    background:#fffdf6; border:2px solid var(--brown-soft); color:var(--brown);
+    padding:8px 14px; border-radius:20px; font-family:'Jua', sans-serif;
+    cursor:pointer; font-size:14px; transition:.15s;
+  }
+  .phase-btn:hover{background:var(--beige-deep);}
+  .phase-btn.active{background:var(--brown); color:#fff8e1; border-color:var(--gold);}
+  .panel{
+    background:#fffdf6; border:2px solid var(--line); border-radius:14px;
+    padding:20px; margin-bottom:18px;
+    position:relative;
+  }
+  .panel::before{
+    content:""; position:absolute; left:10px; right:10px; top:-6px; height:10px;
+    background-image:radial-gradient(circle, var(--line) 30%, transparent 32%);
+    background-size:14px 14px; background-repeat:repeat-x;
+  }
+  .panel h2{
+    font-family:'Jua', sans-serif; color:var(--brown);
+    margin:0 0 12px; font-size:22px; text-align:center;
+  }
+  .counter{
+    display:inline-block; background:var(--gold); color:#fff;
+    padding:3px 12px; border-radius:14px; font-size:14px; margin-left:6px;
+  }
+  /* 모둠별 카드 그리드 */
+  .groups{display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;}
+  @media(max-width:900px){.groups{grid-template-columns:repeat(2, 1fr);}}
+  .group-col{
+    background:var(--beige); border:2px dashed var(--brown-soft); border-radius:12px;
+    padding:12px 10px;
+  }
+  .group-col h3{
+    font-family:'Jua', sans-serif; color:var(--brown); margin:0 0 10px;
+    font-size:18px; text-align:center;
+  }
+  .group-col .gemo{font-size:22px; display:block; text-align:center;}
+  .gc{
+    background:#fffdf6; border:1.5px solid var(--beige-deep); border-radius:10px;
+    padding:10px; margin-bottom:8px; font-size:13px;
+    animation:pop .35s ease;
+  }
+  @keyframes pop{from{transform:scale(.85); opacity:0;} to{transform:scale(1); opacity:1;}}
+  .gc .rn{font-weight:bold; color:var(--brown); font-size:14px;}
+  .gc .cat-badge{
+    display:inline-block; background:var(--beige-deep); color:var(--brown);
+    font-size:11px; padding:2px 8px; border-radius:10px; margin-left:4px;
+  }
+  .gc .ra{color:#555; margin-top:4px; line-height:1.4;}
+  .gc .rmeta{color:var(--brown-soft); font-size:11px; margin-top:4px;}
+  .gc .vbadge{
+    position:absolute;
+    display:none;
+  }
+  .gc.elected{
+    background:linear-gradient(135deg, #fff5d4, #fff8e1);
+    border:2px solid var(--gold);
+    box-shadow:0 4px 14px rgba(198,155,58,.3);
+  }
+  .gc.elected::after{
+    content:"★★★ 대표"; display:inline-block;
+    background:var(--gold); color:#fff;
+    font-family:'Jua',sans-serif; font-size:11px;
+    padding:2px 8px; border-radius:10px; margin-top:6px;
+  }
+  /* 실시간 카운터 */
+  .stats{
+    display:flex; gap:14px; justify-content:center; margin:10px 0 16px;
+    flex-wrap:wrap;
+  }
+  .stat-box{
+    background:var(--beige-deep); border-radius:10px;
+    padding:8px 16px; font-size:14px; color:var(--brown);
+  }
+  .stat-box b{color:var(--gold-deep); font-size:18px;}
+  /* 최종 가이드북 */
+  .guidebook{
+    background:linear-gradient(135deg, #1a1a1a, #2b2b2b);
+    color:#fff8e1; border-radius:16px; padding:30px 20px;
+    text-align:center; margin-top:14px;
+  }
+  .guidebook h2{color:var(--gold);}
+  .guidebook .gb-subtitle{font-size:13px; opacity:.7; letter-spacing:2px; margin-bottom:18px;}
+  .gb-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; max-width:760px; margin:0 auto;}
+  @media(max-width:700px){.gb-grid{grid-template-columns:1fr;}}
+  .gb-card{
+    background:#fff8e1; color:var(--black); border-radius:10px;
+    padding:14px; text-align:left;
+    border:2px solid var(--gold);
+  }
+  .gb-card .gb-cat{font-family:'Jua',sans-serif; color:var(--brown); font-size:14px;}
+  .gb-card .gb-stars{color:var(--gold); font-size:18px; letter-spacing:3px;}
+  .gb-card .gb-rname{font-family:'Jua',sans-serif; color:var(--brown); font-size:20px; margin:4px 0;}
+  .gb-card .gb-action{font-size:14px; color:#444; margin:6px 0;}
+  .gb-card .gb-review{font-size:13px; font-style:italic; color:var(--brown-soft); margin-top:6px; padding-top:6px; border-top:1px dashed var(--brown-soft);}
+  .gb-card .gb-author{font-size:11px; color:var(--brown-soft); margin-top:4px;}
+  /* QR */
+  .qr-row{display:flex; gap:20px; justify-content:center; flex-wrap:wrap; margin-top:18px;}
+  .qr-box{background:#fff8e1; color:var(--brown); padding:12px; border-radius:10px; text-align:center; min-width:160px;}
+  .qr-box img{width:130px; height:130px; background:#fff;}
+  .qr-box .qrlbl{font-family:'Jua', sans-serif; font-size:14px; margin-bottom:6px;}
+  .qr-box .qrurl{font-size:10px; color:var(--brown-soft); word-break:break-all; margin-top:4px;}
+  /* 컨트롤 */
+  .control-row{
+    display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap;
+  }
+  .btn{
+    background:var(--brown); color:#fff8e1; border:none;
+    padding:10px 18px; border-radius:10px;
+    font-family:'Jua', sans-serif; font-size:14px;
+    cursor:pointer; transition:.15s;
+  }
+  .btn:hover{background:#5e3a1a;}
+  .btn.gold{background:var(--gold);}
+  .btn.gold:hover{background:var(--gold-deep);}
+  .btn.red{background:var(--red);}
+  .btn.outline{background:transparent; color:var(--brown); border:2px solid var(--brown);}
+  /* 헬프 */
+  .help{
+    background:#fff8e1; border-left:4px solid var(--gold);
+    padding:10px 14px; border-radius:6px;
+    font-size:13px; color:var(--brown); margin-bottom:14px;
+  }
+  .empty{text-align:center; color:var(--brown-soft); padding:24px; font-size:13px;}
+  .hide{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="tag">加 Us-together · SOUP 프로그램</span>
+    <h1>어울림 <span class="star">★</span> 미슐랭 가이드</h1>
+    <div class="subtitle">한 학기 우리 반 행복 레시피를 발간해요 — 교사 화면</div>
+  </header>
+
+  <!-- 단계 네비게이션 -->
+  <div class="phase-bar">
+    <button class="phase-btn active" data-phase="intro">1. 평론가 등록</button>
+    <button class="phase-btn" data-phase="collect">2. 레시피 수집</button>
+    <button class="phase-btn" data-phase="curation">3. 모둠 큐레이션</button>
+    <button class="phase-btn" data-phase="publish">4. 가이드 발간</button>
+  </div>
+
+  <!-- PHASE: intro -->
+  <div class="panel" id="panel-intro">
+    <h2>📜 수업 시작하기</h2>
+    <div class="help">
+      학생들이 <b>학생 화면 QR</b>로 접속하면 평론가 등록 → 가치 재료 선택 → 레시피 카드 작성을 진행해요.<br>
+      준비가 되면 아래 버튼으로 다음 단계로 넘어갑니다.
+    </div>
+    <div class="qr-row">
+      <div class="qr-box">
+        <div class="qrlbl">📱 학생 접속 QR</div>
+        <img id="studentQR" alt="QR">
+        <div class="qrurl" id="studentURL"></div>
+      </div>
+    </div>
+    <div class="control-row">
+      <button class="btn gold" data-go="collect">▶ 레시피 수집 시작</button>
+      <button class="btn outline" id="resetAll">🗑 데이터 초기화</button>
+    </div>
+  </div>
+
+  <!-- PHASE: collect -->
+  <div class="panel hide" id="panel-collect">
+    <h2>🧂 실시간 레시피 수집 <span class="counter" id="recipeCount">0개</span></h2>
+    <div class="stats">
+      <div class="stat-box">1모둠 <b id="g1count">0</b></div>
+      <div class="stat-box">2모둠 <b id="g2count">0</b></div>
+      <div class="stat-box">3모둠 <b id="g3count">0</b></div>
+      <div class="stat-box">4모둠 <b id="g4count">0</b></div>
+    </div>
+    <div class="groups" id="collectGroups">
+      <div class="group-col"><h3><span class="gemo">🍞</span>1모둠</h3><div data-g="1"></div></div>
+      <div class="group-col"><h3><span class="gemo">🍝</span>2모둠</h3><div data-g="2"></div></div>
+      <div class="group-col"><h3><span class="gemo">🥗</span>3모둠</h3><div data-g="3"></div></div>
+      <div class="group-col"><h3><span class="gemo">🍰</span>4모둠</h3><div data-g="4"></div></div>
+    </div>
+    <div class="control-row">
+      <button class="btn gold" data-go="curation">▶ 모둠 큐레이션 단계로</button>
+    </div>
+  </div>
+
+  <!-- PHASE: curation -->
+  <div class="panel hide" id="panel-curation">
+    <h2>👨‍🍳 모둠 큐레이션 진행 중</h2>
+    <div class="help">
+      학생 화면에 <b>모둠 큐레이션 시작 버튼</b>이 나타나요. 모둠별로 의논해서 <b>★★★ 대표 레시피</b>를 1개씩 골라 제출합니다.
+    </div>
+    <div class="stats">
+      <div class="stat-box">1모둠 투표 <b id="v1">0</b></div>
+      <div class="stat-box">2모둠 투표 <b id="v2">0</b></div>
+      <div class="stat-box">3모둠 투표 <b id="v3">0</b></div>
+      <div class="stat-box">4모둠 투표 <b id="v4">0</b></div>
+    </div>
+    <div class="groups" id="curationGroups">
+      <div class="group-col"><h3><span class="gemo">🍞</span>1모둠</h3><div data-g="1"></div></div>
+      <div class="group-col"><h3><span class="gemo">🍝</span>2모둠</h3><div data-g="2"></div></div>
+      <div class="group-col"><h3><span class="gemo">🥗</span>3모둠</h3><div data-g="3"></div></div>
+      <div class="group-col"><h3><span class="gemo">🍰</span>4모둠</h3><div data-g="4"></div></div>
+    </div>
+    <div class="control-row">
+      <button class="btn gold" data-go="publish">🏆 어울림 미슐랭 가이드 발간!</button>
+    </div>
+  </div>
+
+  <!-- PHASE: publish -->
+  <div class="panel hide" id="panel-publish">
+    <h2>🏆 어울림 미슐랭 가이드 발간</h2>
+    <div class="guidebook">
+      <div class="gb-subtitle">THE OUR-CLASS MICHELIN GUIDE · 2026</div>
+      <h2 style="margin:0;">⭐⭐⭐ 우리 반 행복 레시피 ⭐⭐⭐</h2>
+      <div style="margin:8px 0 20px; font-size:13px; opacity:.8;">한 학기, 우리 반이 직접 검증한 따뜻한 레시피</div>
+      <div class="gb-grid" id="gbGrid">
+        <div class="empty" style="grid-column:1/-1; color:#fff8e188;">대표 레시피가 선정되면 여기에 발간됩니다</div>
+      </div>
+    </div>
+    <div class="qr-row">
+      <div class="qr-box">
+        <div class="qrlbl">📕 가이드북 공유 QR</div>
+        <img id="publishQR" alt="QR">
+        <div class="qrurl">참관 선생님께 발간 가이드 공유</div>
+      </div>
+    </div>
+    <div class="control-row">
+      <button class="btn outline" id="exportPrint">🖨 가이드북 인쇄/PDF 저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getDatabase, ref, onValue, set, remove, get, child
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE_WITH_YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://REPLACE_WITH_YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "REPLACE_WITH_YOUR_PROJECT",
+  storageBucket: "REPLACE_WITH_YOUR_PROJECT.appspot.com",
+  messagingSenderId: "REPLACE",
+  appId: "REPLACE"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const ROOT = "michelin_guide";
+
+// --- QR ---
+const studentURL = location.href.replace(/\/[^\/]*$/, "/student.html");
+document.getElementById("studentURL").textContent = studentURL;
+new QRCode(document.getElementById("studentQR"), {
+  text:studentURL, width:130, height:130
+});
+new QRCode(document.getElementById("publishQR"), {
+  text:studentURL, width:130, height:130
+});
+
+// --- Phase 전환 ---
+function setPhase(phase){
+  document.querySelectorAll(".phase-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.phase===phase);
+  });
+  ["intro","collect","curation","publish"].forEach(p=>{
+    document.getElementById("panel-"+p).classList.toggle("hide", p!==phase);
+  });
+  set(ref(db, ROOT+"/phase"), phase);
+}
+document.querySelectorAll(".phase-btn").forEach(b=>{
+  b.addEventListener("click", ()=>setPhase(b.dataset.phase));
+});
+document.querySelectorAll("[data-go]").forEach(b=>{
+  b.addEventListener("click", ()=>setPhase(b.dataset.go));
+});
+
+// --- 초기화 ---
+document.getElementById("resetAll").addEventListener("click", async ()=>{
+  if(!confirm("모든 제출 데이터를 초기화할까요? (수업 시작 전에만 사용)")) return;
+  await remove(ref(db, ROOT+"/recipes"));
+  await remove(ref(db, ROOT+"/votes"));
+  await set(ref(db, ROOT+"/phase"), "intro");
+  alert("초기화 완료!");
+});
+
+// --- 레시피 실시간 ---
+let recipesCache = {};
+onValue(ref(db, ROOT+"/recipes"), snap=>{
+  recipesCache = snap.val() || {};
+  renderCollect();
+  renderCuration();
+});
+
+function renderCollect(){
+  const counts = {1:0,2:0,3:0,4:0};
+  for(let g=1;g<=4;g++){
+    document.querySelector(`#collectGroups [data-g="${g}"]`).innerHTML="";
+  }
+  const items = Object.entries(recipesCache).sort((a,b)=>a[1].ts-b[1].ts);
+  for(const [id, r] of items){
+    counts[r.group] = (counts[r.group]||0)+1;
+    const col = document.querySelector(`#collectGroups [data-g="${r.group}"]`);
+    if(col){
+      const div = document.createElement("div");
+      div.className="gc"; div.id="collect-"+id;
+      div.innerHTML = `
+        <div class="rn">${escapeHtml(r.recipeName)} <span class="cat-badge">${escapeHtml(r.category)}</span></div>
+        <div class="ra">"${escapeHtml(r.recipeAction)}"</div>
+        <div class="rmeta">— ${escapeHtml(r.name)} · 가치 재료: <b>${escapeHtml(r.value)}</b></div>
+      `;
+      col.appendChild(div);
+    }
+  }
+  document.getElementById("recipeCount").textContent = items.length + "개";
+  for(let g=1;g<=4;g++) document.getElementById("g"+g+"count").textContent = counts[g];
+}
+
+// --- 투표 실시간 ---
+let votesCache = {};
+onValue(ref(db, ROOT+"/votes"), snap=>{
+  votesCache = snap.val() || {};
+  renderCuration();
+  renderPublish();
+});
+
+function tallyVotes(){
+  // {groupNum: {recipeId: count}}
+  const tally = {1:{},2:{},3:{},4:{}};
+  for(const id in votesCache){
+    const v = votesCache[id];
+    if(!tally[v.group]) tally[v.group]={};
+    tally[v.group][v.recipeId] = (tally[v.group][v.recipeId]||0)+1;
+  }
+  // 모둠별 최다득표 레시피
+  const elected = {};
+  for(let g=1;g<=4;g++){
+    const t = tally[g]; let max=0, winner=null;
+    for(const rid in t){ if(t[rid]>max){max=t[rid]; winner=rid;} }
+    if(winner) elected[g] = winner;
+  }
+  return {tally, elected};
+}
+
+function renderCuration(){
+  for(let g=1;g<=4;g++){
+    document.querySelector(`#curationGroups [data-g="${g}"]`).innerHTML="";
+  }
+  const {tally, elected} = tallyVotes();
+  const voteCounts = {1:0,2:0,3:0,4:0};
+  for(const id in votesCache){
+    voteCounts[votesCache[id].group]++;
+  }
+  for(let g=1;g<=4;g++) document.getElementById("v"+g).textContent = voteCounts[g];
+
+  const items = Object.entries(recipesCache).sort((a,b)=>a[1].ts-b[1].ts);
+  for(const [id, r] of items){
+    const col = document.querySelector(`#curationGroups [data-g="${r.group}"]`);
+    if(!col) continue;
+    const div = document.createElement("div");
+    div.className="gc";
+    if(elected[r.group]===id) div.classList.add("elected");
+    const vCount = (tally[r.group]||{})[id] || 0;
+    div.innerHTML = `
+      <div class="rn">${escapeHtml(r.recipeName)} <span class="cat-badge">${escapeHtml(r.category)}</span></div>
+      <div class="ra">"${escapeHtml(r.recipeAction)}"</div>
+      <div class="rmeta">— ${escapeHtml(r.name)} · 가치: <b>${escapeHtml(r.value)}</b> · 득표 ${vCount}</div>
+    `;
+    col.appendChild(div);
+  }
+}
+
+function renderPublish(){
+  const {elected} = tallyVotes();
+  const grid = document.getElementById("gbGrid");
+  const winners = [];
+  for(let g=1;g<=4;g++){
+    if(elected[g] && recipesCache[elected[g]]){
+      winners.push({group:g, ...recipesCache[elected[g]]});
+    }
+  }
+  if(winners.length===0){
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1; color:#fff8e188;">대표 레시피가 선정되면 여기에 발간됩니다</div>';
+    return;
+  }
+  grid.innerHTML = winners.map(w=>`
+    <div class="gb-card">
+      <div class="gb-cat">${w.group}모둠 · ${escapeHtml(w.category)}</div>
+      <div class="gb-stars">★★★</div>
+      <div class="gb-rname">${escapeHtml(w.recipeName)}</div>
+      <div class="gb-action">조리법 · "${escapeHtml(w.recipeAction)}"</div>
+      <div class="gb-review">"${escapeHtml(w.recipeReview)}"</div>
+      <div class="gb-author">핵심 재료: ${escapeHtml(w.value)} · 큐레이터: ${escapeHtml(w.name)} 외 모둠원</div>
+    </div>
+  `).join("");
+}
+
+// 인쇄
+document.getElementById("exportPrint").addEventListener("click", ()=>{
+  window.print();
+});
+
+function escapeHtml(s){
+  return String(s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+// 초기 phase 동기화
+onValue(ref(db, ROOT+"/phase"), snap=>{
+  const phase = snap.val()||"intro";
+  // 교사가 직접 클릭한 게 아니더라도 다른 탭에서 바뀌면 반영
+  document.querySelectorAll(".phase-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.phase===phase);
+  });
+  ["intro","collect","curation","publish"].forEach(p=>{
+    document.getElementById("panel-"+p).classList.toggle("hide", p!==phase);
+  });
+});
+</script>
+
+<style>
+@media print{
+  body{background:#fff;}
+  .phase-bar, .control-row, .qr-row, header, #panel-intro, #panel-collect, #panel-curation{display:none !important;}
+  #panel-publish{display:block !important;}
+  .guidebook{background:#fff !important; color:#000 !important; box-shadow:none;}
+  .guidebook h2, .gb-subtitle{color:#7a4a23 !important;}
+  .gb-card{break-inside:avoid;}
+}
+</style>
+</body>
+</html>
