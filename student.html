@@ -95,16 +95,14 @@
     user-select:none; font-family:'Jua',sans-serif; font-size:14px; color:var(--brown);
   }
   .gcat.picked{background:var(--brown); border-color:var(--gold); color:#fff8e1;}
-  /* 카테고리 선택 */
-  .categories{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;}
-  .cat{
-    background:#fffdf6; border:2px solid var(--beige-deep); border-radius:14px;
-    padding:12px 8px; text-align:center; cursor:pointer; transition:.18s;
-    user-select:none;
+  /* 별점 선택 */
+  .star-pick{display:flex; gap:10px; justify-content:center; margin:10px 0 4px;}
+  .star-btn{
+    font-size:32px; cursor:pointer; opacity:.3; transition:.15s;
+    user-select:none; line-height:1;
   }
-  .cat.picked{background:var(--brown); border-color:var(--gold); color:#fff8e1;}
-  .cat .cat-name{font-family:'Jua', sans-serif; font-size:15px;}
-  .cat .cat-sub{font-size:11px; opacity:.8; margin-top:2px;}
+  .star-btn.on{opacity:1;}
+  .star-label{text-align:center; font-size:12px; color:var(--brown-soft); margin-top:2px;}
   /* 입력 */
   .field{margin:10px 0;}
   .field label{display:block; font-size:13px; color:var(--brown); margin-bottom:4px; font-weight:bold;}
@@ -224,49 +222,32 @@
     <button class="btn" id="toStage3" disabled>다음 단계로 →</button>
   </div>
 
-  <!-- STAGE 3: 레시피 카드 작성 -->
+  <!-- STAGE 3: 평론 카드 작성 -->
   <div class="stage" id="stage3">
-    <div class="stage-title">📝 나의 행복 레시피 카드</div>
-    <div class="stage-desc">고른 가치 재료로 어떤 레시피를 만들었나요?</div>
+    <div class="stage-title">★ 나의 미슐랭 평론 카드</div>
+    <div class="stage-desc">한 학기 동안 내가 직접 써본 가치,<br>평론가의 눈으로 돌아봐요</div>
     <div class="picked-summary" id="pickedSummary"></div>
     <div class="card">
       <div class="field">
-        <label>🍽️ 카테고리</label>
-        <div class="categories" id="catPick">
-          <div class="cat" data-c="에피타이저">
-            <div class="cat-name">에피타이저</div>
-            <div class="cat-sub">관계의 시작</div>
-          </div>
-          <div class="cat" data-c="메인 디시">
-            <div class="cat-name">메인 디시</div>
-            <div class="cat-sub">핵심 가치</div>
-          </div>
-          <div class="cat" data-c="사이드">
-            <div class="cat-name">사이드</div>
-            <div class="cat-sub">소소한 배려</div>
-          </div>
-          <div class="cat" data-c="디저트">
-            <div class="cat-name">디저트</div>
-            <div class="cat-sub">화해의 마무리</div>
-          </div>
-        </div>
-      </div>
-      <div class="field">
-        <label>✨ 레시피 이름</label>
-        <input type="text" id="recipeName" placeholder="예: 눈맞춤 한 스푼, 공감 토핑 듬뿍" maxlength="20">
-        <div class="hint">가치 + 음식 느낌으로 이름을 지어봐요</div>
-      </div>
-      <div class="field">
-        <label>👨‍🍳 조리법 (실제로 내가 한 행동)</label>
-        <textarea id="recipeAction" placeholder="예: 친구가 화났을 때 끝까지 듣고, '많이 속상했겠다'라고 말해줬어요." maxlength="120"></textarea>
+        <label>언제, 어떤 상황에서 이 가치를 썼나요?</label>
+        <textarea id="recipeAction" placeholder="예: 친구가 속상해 보여서 끝까지 말을 들어줬어요." maxlength="120"></textarea>
         <div class="hint">한 학기 동안 실제로 경험한 일을 구체적으로 써요</div>
       </div>
       <div class="field">
-        <label>💬 한 줄 평 (나에게 어떤 변화가 있었나요?)</label>
-        <input type="text" id="recipeReview" placeholder="예: 친구와 더 친해졌어요" maxlength="40">
+        <label>그 가치, 나에게 얼마나 효과 있었나요?</label>
+        <div class="star-pick" id="starPick">
+          <span class="star-btn" data-s="1">★</span>
+          <span class="star-btn" data-s="2">★</span>
+          <span class="star-btn" data-s="3">★</span>
+        </div>
+        <div class="star-label" id="starLabel">별을 눌러 평가해요</div>
+      </div>
+      <div class="field">
+        <label>한 줄 평론 — 왜 이 가치가 효과 있었나요?</label>
+        <input type="text" id="recipeReview" placeholder="예: 친구가 마음을 열고 먼저 말을 걸어왔어요." maxlength="60">
       </div>
     </div>
-    <button class="btn" id="submitRecipe" disabled>🚀 레시피 제출하기</button>
+    <button class="btn" id="submitRecipe" disabled>평론 카드 제출하기</button>
   </div>
 
   <!-- STAGE 4: 제출 완료 + 대기 -->
@@ -327,8 +308,8 @@ const COL_VOTES = "michelin_votes";
 const COL_STATE = "michelin_state";          // 문서 1개: {id: "current", phase: "..."}
 
 const state = {
-  name:"", group:0, value:"",
-  category:"", recipeName:"", recipeAction:"", recipeReview:"",
+  name:"", group:0, value:"", stars:0,
+  recipeAction:"", recipeReview:"",
   recipeId:"", voteId:""
 };
 
@@ -381,26 +362,30 @@ ingsEl.addEventListener("click", e=>{
 });
 toStage3.addEventListener("click", ()=>{
   document.getElementById("pickedSummary").innerHTML =
-    `<b>${state.name}</b>님 · ${state.group}모둠 · 가치 재료: <b>${state.value}</b>`;
+    `<b>${state.name}</b>님 · ${state.group}모둠 · 선택한 가치: <b>${state.value}</b>`;
   gotoStage(3);
 });
 
-// STAGE 3
-const catPick = document.getElementById("catPick");
-const recipeName = document.getElementById("recipeName");
+// STAGE 3 — 평론 카드 (별점 + 상황 + 한 줄 평론)
+const starPick = document.getElementById("starPick");
+const starLabel = document.getElementById("starLabel");
 const recipeAction = document.getElementById("recipeAction");
 const recipeReview = document.getElementById("recipeReview");
 const submitRecipe = document.getElementById("submitRecipe");
+const starLabels = {1:"효과가 조금 있었어요", 2:"꽤 효과 있었어요", 3:"정말 효과 있었어요!"};
 function checkStage3(){
-  submitRecipe.disabled = !(state.category && state.recipeName.trim() &&
-    state.recipeAction.trim() && state.recipeReview.trim());
+  submitRecipe.disabled = !(state.stars && state.recipeAction.trim() && state.recipeReview.trim());
 }
-catPick.addEventListener("click", e=>{
-  const t=e.target.closest(".cat"); if(!t) return;
-  catPick.querySelectorAll(".cat").forEach(c=>c.classList.remove("picked"));
-  t.classList.add("picked"); state.category=t.dataset.c; checkStage3();
+starPick.addEventListener("click", e=>{
+  const t=e.target.closest(".star-btn"); if(!t) return;
+  const n = Number(t.dataset.s);
+  state.stars = n;
+  starPick.querySelectorAll(".star-btn").forEach((s,i)=>{
+    s.classList.toggle("on", i < n);
+  });
+  starLabel.textContent = starLabels[n];
+  checkStage3();
 });
-recipeName.addEventListener("input", e=>{state.recipeName=e.target.value; checkStage3();});
 recipeAction.addEventListener("input", e=>{state.recipeAction=e.target.value; checkStage3();});
 recipeReview.addEventListener("input", e=>{state.recipeReview=e.target.value; checkStage3();});
 
@@ -408,7 +393,7 @@ submitRecipe.addEventListener("click", async ()=>{
   submitRecipe.disabled=true;
   const data = {
     name:state.name, group:state.group, value:state.value,
-    category:state.category, recipeName:state.recipeName,
+    stars:state.stars,
     recipeAction:state.recipeAction, recipeReview:state.recipeReview,
     ts: serverTimestamp()
   };

@@ -378,10 +378,11 @@ function renderCollect(){
     if(col){
       const div = document.createElement("div");
       div.className="gc"; div.id="collect-"+id;
+      const starsStr = "★".repeat(r.stars||0) + "☆".repeat(3-(r.stars||0));
       div.innerHTML = `
-        <div class="rn">${escapeHtml(r.recipeName)} <span class="cat-badge">${escapeHtml(r.category)}</span></div>
+        <div class="rn">${escapeHtml(r.value)} <span class="cat-badge">${starsStr}</span></div>
         <div class="ra">"${escapeHtml(r.recipeAction)}"</div>
-        <div class="rmeta">— ${escapeHtml(r.name)} · 가치 재료: <b>${escapeHtml(r.value)}</b></div>
+        <div class="rmeta">— ${escapeHtml(r.name)} · 한 줄 평: ${escapeHtml(r.recipeReview)}</div>
       `;
       col.appendChild(div);
     }
@@ -434,10 +435,11 @@ function renderCuration(){
     div.className="gc";
     if(elected[r.group]===id) div.classList.add("elected");
     const vCount = (tally[r.group]||{})[id] || 0;
+    const starsStr2 = "★".repeat(r.stars||0) + "☆".repeat(3-(r.stars||0));
     div.innerHTML = `
-      <div class="rn">${escapeHtml(r.recipeName)} <span class="cat-badge">${escapeHtml(r.category)}</span></div>
+      <div class="rn">${escapeHtml(r.value)} <span class="cat-badge">${starsStr2}</span></div>
       <div class="ra">"${escapeHtml(r.recipeAction)}"</div>
-      <div class="rmeta">— ${escapeHtml(r.name)} · 가치: <b>${escapeHtml(r.value)}</b> · 득표 ${vCount}</div>
+      <div class="rmeta">— ${escapeHtml(r.name)} · ${escapeHtml(r.recipeReview)} · 득표 ${vCount}</div>
     `;
     col.appendChild(div);
   }
@@ -456,16 +458,19 @@ function renderPublish(){
     grid.innerHTML = '<div class="empty" style="grid-column:1/-1; color:#fff8e188;">대표 레시피가 선정되면 여기에 발간됩니다</div>';
     return;
   }
-  grid.innerHTML = winners.map(w=>`
+  grid.innerHTML = winners.map(w=>{
+    const s = w.stars||0;
+    const starsDisp = "★".repeat(s) + "☆".repeat(3-s);
+    return `
     <div class="gb-card">
-      <div class="gb-cat">${w.group}모둠 · ${escapeHtml(w.category)}</div>
-      <div class="gb-stars">★★★</div>
-      <div class="gb-rname">${escapeHtml(w.recipeName)}</div>
-      <div class="gb-action">조리법 · "${escapeHtml(w.recipeAction)}"</div>
-      <div class="gb-review">"${escapeHtml(w.recipeReview)}"</div>
-      <div class="gb-author">핵심 재료: ${escapeHtml(w.value)} · 큐레이터: ${escapeHtml(w.name)} 외 모둠원</div>
-    </div>
-  `).join("");
+      <div class="gb-cat">${w.group}모둠</div>
+      <div class="gb-stars">${starsDisp}</div>
+      <div class="gb-rname">${escapeHtml(w.value)}</div>
+      <div class="gb-action">"${escapeHtml(w.recipeAction)}"</div>
+      <div class="gb-review">${escapeHtml(w.recipeReview)}</div>
+      <div class="gb-author">평론가: ${escapeHtml(w.name)} 외 모둠원</div>
+    </div>`;
+  }).join("");
 }
 
 // 인쇄
