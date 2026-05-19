@@ -66,8 +66,9 @@
     padding:3px 12px; border-radius:14px; font-size:14px; margin-left:6px;
   }
   /* 모둠별 카드 그리드 */
-  .groups{display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;}
-  @media(max-width:900px){.groups{grid-template-columns:repeat(2, 1fr);}}
+  .groups{display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;}
+  @media(max-width:1100px){.groups{grid-template-columns:repeat(3, 1fr);}}
+  @media(max-width:700px){.groups{grid-template-columns:repeat(2, 1fr);}}
   .group-col{
     background:var(--beige); border:2px dashed var(--brown-soft); border-radius:12px;
     padding:12px 10px;
@@ -211,12 +212,14 @@
       <div class="stat-box">2모둠 <b id="g2count">0</b></div>
       <div class="stat-box">3모둠 <b id="g3count">0</b></div>
       <div class="stat-box">4모둠 <b id="g4count">0</b></div>
+      <div class="stat-box">5모둠 <b id="g5count">0</b></div>
     </div>
     <div class="groups" id="collectGroups">
       <div class="group-col"><h3><span class="gemo">🍞</span>1모둠</h3><div data-g="1"></div></div>
       <div class="group-col"><h3><span class="gemo">🍝</span>2모둠</h3><div data-g="2"></div></div>
       <div class="group-col"><h3><span class="gemo">🥗</span>3모둠</h3><div data-g="3"></div></div>
       <div class="group-col"><h3><span class="gemo">🍰</span>4모둠</h3><div data-g="4"></div></div>
+      <div class="group-col"><h3><span class="gemo">🍵</span>5모둠</h3><div data-g="5"></div></div>
     </div>
     <div class="control-row">
       <button class="btn gold" data-go="curation">▶ 모둠 큐레이션 단계로</button>
@@ -234,12 +237,14 @@
       <div class="stat-box">2모둠 투표 <b id="v2">0</b></div>
       <div class="stat-box">3모둠 투표 <b id="v3">0</b></div>
       <div class="stat-box">4모둠 투표 <b id="v4">0</b></div>
+      <div class="stat-box">5모둠 투표 <b id="v5">0</b></div>
     </div>
     <div class="groups" id="curationGroups">
       <div class="group-col"><h3><span class="gemo">🍞</span>1모둠</h3><div data-g="1"></div></div>
       <div class="group-col"><h3><span class="gemo">🍝</span>2모둠</h3><div data-g="2"></div></div>
       <div class="group-col"><h3><span class="gemo">🥗</span>3모둠</h3><div data-g="3"></div></div>
       <div class="group-col"><h3><span class="gemo">🍰</span>4모둠</h3><div data-g="4"></div></div>
+      <div class="group-col"><h3><span class="gemo">🍵</span>5모둠</h3><div data-g="5"></div></div>
     </div>
     <div class="control-row">
       <button class="btn gold" data-go="publish">🏆 어울림 미슐랭 가이드 발간!</button>
@@ -362,7 +367,7 @@ function tsValue(r){
 }
 
 function renderCollect(){
-  const counts = {1:0,2:0,3:0,4:0};
+  const counts = {1:0,2:0,3:0,4:0,5:0};
   for(let g=1;g<=4;g++){
     document.querySelector(`#collectGroups [data-g="${g}"]`).innerHTML="";
   }
@@ -382,7 +387,7 @@ function renderCollect(){
     }
   }
   document.getElementById("recipeCount").textContent = items.length + "개";
-  for(let g=1;g<=4;g++) document.getElementById("g"+g+"count").textContent = counts[g];
+  for(let g=1;g<=5;g++) document.getElementById("g"+g+"count").textContent = counts[g];
 }
 
 // --- 투표 실시간 ---
@@ -395,14 +400,14 @@ onSnapshot(collection(db, COL_VOTES), snap=>{
 });
 
 function tallyVotes(){
-  const tally = {1:{},2:{},3:{},4:{}};
+  const tally = {1:{},2:{},3:{},4:{},5:{}};
   for(const id in votesCache){
     const v = votesCache[id];
     if(!tally[v.group]) tally[v.group]={};
     tally[v.group][v.recipeId] = (tally[v.group][v.recipeId]||0)+1;
   }
   const elected = {};
-  for(let g=1;g<=4;g++){
+  for(let g=1;g<=5;g++){
     const t = tally[g]; let max=0, winner=null;
     for(const rid in t){ if(t[rid]>max){max=t[rid]; winner=rid;} }
     if(winner) elected[g] = winner;
@@ -415,11 +420,11 @@ function renderCuration(){
     document.querySelector(`#curationGroups [data-g="${g}"]`).innerHTML="";
   }
   const {tally, elected} = tallyVotes();
-  const voteCounts = {1:0,2:0,3:0,4:0};
+  const voteCounts = {1:0,2:0,3:0,4:0,5:0};
   for(const id in votesCache){
     voteCounts[votesCache[id].group] = (voteCounts[votesCache[id].group]||0)+1;
   }
-  for(let g=1;g<=4;g++) document.getElementById("v"+g).textContent = voteCounts[g];
+  for(let g=1;g<=5;g++) document.getElementById("v"+g).textContent = voteCounts[g];
 
   const items = Object.entries(recipesCache).sort((a,b)=>tsValue(a[1])-tsValue(b[1]));
   for(const [id, r] of items){
@@ -442,7 +447,7 @@ function renderPublish(){
   const {elected} = tallyVotes();
   const grid = document.getElementById("gbGrid");
   const winners = [];
-  for(let g=1;g<=4;g++){
+  for(let g=1;g<=5;g++){
     if(elected[g] && recipesCache[elected[g]]){
       winners.push({group:g, ...recipesCache[elected[g]]});
     }

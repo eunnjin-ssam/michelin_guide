@@ -84,19 +84,26 @@
     padding:10px 6px; text-align:center; cursor:pointer; transition:.18s;
     user-select:none;
   }
-  .ing .emoji{font-size:32px; line-height:1.1; display:block;}
   .ing .name{font-size:13px; color:var(--brown); margin-top:4px; font-weight:bold;}
   .ing.picked{background:var(--gold); border-color:var(--brown); color:#fff;}
   .ing.picked .name{color:#fff;}
-  /* STAGE 2: 카테고리 선택 */
+  /* 모둠 선택 (5모둠, 아이콘 없음) */
+  .group-pick{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:6px;}
+  .gcat{
+    background:#fffdf6; border:2px solid var(--beige-deep); border-radius:14px;
+    padding:12px 6px; text-align:center; cursor:pointer; transition:.18s;
+    user-select:none; font-family:'Jua',sans-serif; font-size:14px; color:var(--brown);
+  }
+  .gcat.picked{background:var(--brown); border-color:var(--gold); color:#fff8e1;}
+  /* 카테고리 선택 */
   .categories{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;}
   .cat{
     background:#fffdf6; border:2px solid var(--beige-deep); border-radius:14px;
     padding:12px 8px; text-align:center; cursor:pointer; transition:.18s;
+    user-select:none;
   }
   .cat.picked{background:var(--brown); border-color:var(--gold); color:#fff8e1;}
-  .cat .cat-emoji{font-size:24px; display:block;}
-  .cat .cat-name{font-family:'Jua', sans-serif; font-size:15px; margin-top:4px;}
+  .cat .cat-name{font-family:'Jua', sans-serif; font-size:15px;}
   .cat .cat-sub{font-size:11px; opacity:.8; margin-top:2px;}
   /* 입력 */
   .field{margin:10px 0;}
@@ -184,11 +191,12 @@
       </div>
       <div class="field">
         <label>우리 모둠</label>
-        <div class="categories" id="groupPick">
-          <div class="cat" data-g="1"><span class="cat-emoji">🍞</span><div class="cat-name">1모둠</div></div>
-          <div class="cat" data-g="2"><span class="cat-emoji">🍝</span><div class="cat-name">2모둠</div></div>
-          <div class="cat" data-g="3"><span class="cat-emoji">🥗</span><div class="cat-name">3모둠</div></div>
-          <div class="cat" data-g="4"><span class="cat-emoji">🍰</span><div class="cat-name">4모둠</div></div>
+        <div class="group-pick" id="groupPick">
+          <div class="gcat" data-g="1">1모둠</div>
+          <div class="gcat" data-g="2">2모둠</div>
+          <div class="gcat" data-g="3">3모둠</div>
+          <div class="gcat" data-g="4">4모둠</div>
+          <div class="gcat" data-g="5">5모둠</div>
         </div>
       </div>
     </div>
@@ -201,15 +209,15 @@
     <div class="stage-desc">한 학기 동안 내가 직접 써본<br><b>'진짜 효과 있었던' 가치 재료</b>를 1개 골라요</div>
     <div class="card">
       <div class="ingredients" id="ingredients">
-        <div class="ing" data-v="경청"><span class="emoji">👂</span><div class="name">경청</div></div>
-        <div class="ing" data-v="공감"><span class="emoji">💗</span><div class="name">공감</div></div>
-        <div class="ing" data-v="배려"><span class="emoji">🌿</span><div class="name">배려</div></div>
-        <div class="ing" data-v="존중"><span class="emoji">🤝</span><div class="name">존중</div></div>
-        <div class="ing" data-v="용기"><span class="emoji">🥄</span><div class="name">용기</div></div>
-        <div class="ing" data-v="책임"><span class="emoji">🛡️</span><div class="name">책임</div></div>
-        <div class="ing" data-v="협력"><span class="emoji">🧑‍🤝‍🧑</span><div class="name">협력</div></div>
-        <div class="ing" data-v="정직"><span class="emoji">🌟</span><div class="name">정직</div></div>
-        <div class="ing" data-v="감사"><span class="emoji">🌻</span><div class="name">감사</div></div>
+        <div class="ing" data-v="경청"><div class="name">경청</div></div>
+        <div class="ing" data-v="공감"><div class="name">공감</div></div>
+        <div class="ing" data-v="배려"><div class="name">배려</div></div>
+        <div class="ing" data-v="존중"><div class="name">존중</div></div>
+        <div class="ing" data-v="용기"><div class="name">용기</div></div>
+        <div class="ing" data-v="책임"><div class="name">책임</div></div>
+        <div class="ing" data-v="협력"><div class="name">협력</div></div>
+        <div class="ing" data-v="정직"><div class="name">정직</div></div>
+        <div class="ing" data-v="감사"><div class="name">감사</div></div>
       </div>
       <div class="hint" style="margin-top:8px;">💡 3월에 배웠던 가치 재료들이에요. 한 학기 동안 한 번이라도 직접 써본 가치를 골라요.</div>
     </div>
@@ -226,22 +234,18 @@
         <label>🍽️ 카테고리</label>
         <div class="categories" id="catPick">
           <div class="cat" data-c="에피타이저">
-            <span class="cat-emoji">🥖</span>
             <div class="cat-name">에피타이저</div>
             <div class="cat-sub">관계의 시작</div>
           </div>
           <div class="cat" data-c="메인 디시">
-            <span class="cat-emoji">🍲</span>
             <div class="cat-name">메인 디시</div>
             <div class="cat-sub">핵심 가치</div>
           </div>
           <div class="cat" data-c="사이드">
-            <span class="cat-emoji">🥗</span>
             <div class="cat-name">사이드</div>
             <div class="cat-sub">소소한 배려</div>
           </div>
           <div class="cat" data-c="디저트">
-            <span class="cat-emoji">🍮</span>
             <div class="cat-name">디저트</div>
             <div class="cat-sub">화해의 마무리</div>
           </div>
@@ -307,12 +311,12 @@ import {
 
 // 4·5월 사이트와 동일한 Firebase 프로젝트 (선생님이 본인 키로 교체)
 const firebaseConfig = {
-  apiKey: "AIzaSyALMrsAUydtFCizQoSvdSOqmO1o0pVH6OE",
-  authDomain: "ns3rd-3a5d3.firebaseapp.com",
-  projectId: ""ns3rd-3a5d3",
-  storageBucket: "ns3rd-3a5d3.firebasestorage.app",
-  messagingSenderId: "1032550243279",
-  appId: "1:1032550243279:web:1d6d2da4145e6a06c310ba"
+  apiKey: "REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE_WITH_YOUR_PROJECT.firebaseapp.com",
+  projectId: "REPLACE_WITH_YOUR_PROJECT",
+  storageBucket: "REPLACE_WITH_YOUR_PROJECT.appspot.com",
+  messagingSenderId: "REPLACE",
+  appId: "REPLACE"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -360,8 +364,8 @@ function checkStage1(){
 }
 nameInput.addEventListener("input", e=>{ state.name=e.target.value; checkStage1(); });
 groupPick.addEventListener("click", e=>{
-  const t=e.target.closest(".cat"); if(!t) return;
-  groupPick.querySelectorAll(".cat").forEach(c=>c.classList.remove("picked"));
+  const t=e.target.closest(".gcat"); if(!t) return;
+  groupPick.querySelectorAll(".gcat").forEach(c=>c.classList.remove("picked"));
   t.classList.add("picked"); state.group=Number(t.dataset.g); checkStage1();
 });
 toStage2.addEventListener("click", ()=>gotoStage(2));
