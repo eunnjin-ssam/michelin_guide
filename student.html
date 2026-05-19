@@ -297,34 +297,38 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Firebase -->
+<!-- Firebase Firestore -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getDatabase, ref, push, set, onValue, get, child, update
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs,
+  query, where, onSnapshot, serverTimestamp, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // 4·5월 사이트와 동일한 Firebase 프로젝트 (선생님이 본인 키로 교체)
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://REPLACE_WITH_YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "REPLACE_WITH_YOUR_PROJECT",
-  storageBucket: "REPLACE_WITH_YOUR_PROJECT.appspot.com",
-  messagingSenderId: "REPLACE",
-  appId: "REPLACE"
+  apiKey: "AIzaSyALMrsAUydtFCizQoSvdSOqmO1o0pVH6OE",
+  authDomain: "ns3rd-3a5d3.firebaseapp.com",
+  projectId: ""ns3rd-3a5d3",
+  storageBucket: "ns3rd-3a5d3.firebasestorage.app",
+  messagingSenderId: "1032550243279",
+  appId: "1:1032550243279:web:1d6d2da4145e6a06c310ba"
 };
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const ROOT = "michelin_guide";  // 5월 'courage_spoon'과 동일한 네이밍 규칙
+const db = getFirestore(app);
+
+// Firestore 컬렉션명 — 4·5월과 섞이지 않도록 prefix로 구분
+const COL_RECIPES = "michelin_recipes";
+const COL_VOTES = "michelin_votes";
+const COL_STATE = "michelin_state";          // 문서 1개: {id: "current", phase: "..."}
 
 const state = {
-  name:"", group:0, value:"", category:"",
-  recipeName:"", recipeAction:"", recipeReview:"",
+  name:"", group:0, value:"",
+  category:"", recipeName:"", recipeAction:"", recipeReview:"",
   recipeId:"", voteId:""
 };
 
-// 도트 표시 (4단계 그룹)
+// 도트 표시
 function setDot(stage){
   for(let i=1;i<=4;i++){
     const d=document.getElementById("dot"+i);
@@ -402,21 +406,23 @@ submitRecipe.addEventListener("click", async ()=>{
     name:state.name, group:state.group, value:state.value,
     category:state.category, recipeName:state.recipeName,
     recipeAction:state.recipeAction, recipeReview:state.recipeReview,
-    ts:Date.now()
+    ts: serverTimestamp()
   };
   try{
-    const r = await push(ref(db, ROOT+"/recipes"), data);
-    state.recipeId = r.key;
+    const r = await addDoc(collection(db, COL_RECIPES), data);
+    state.recipeId = r.id;
     gotoStage(4);
   }catch(e){
+    console.error(e);
     toast("제출 오류. 다시 시도해주세요.");
     submitRecipe.disabled=false;
   }
 });
 
 // STAGE 4 → 5 : 선생님이 curation 단계를 열면 진행
-onValue(ref(db, ROOT+"/phase"), snap=>{
-  const phase = snap.val();
+onSnapshot(doc(db, COL_STATE, "current"), snap=>{
+  if(!snap.exists()) return;
+  const phase = snap.data().phase;
   if(phase==="curation" && state.recipeId){
     document.getElementById("goCuration").style.display="block";
   }
@@ -428,47 +434,51 @@ document.getElementById("goCuration").addEventListener("click", async ()=>{
 
 // STAGE 5: 모둠 카드 로딩 + 투표
 async function loadGroupCards(){
-  const snap = await get(child(ref(db), ROOT+"/recipes"));
-  const all = snap.val()||{};
-  const myGroup = state.group;
   const groupCardsEl = document.getElementById("groupCards");
   groupCardsEl.innerHTML="";
-  for(const id in all){
-    const r = all[id];
-    if(r.group!==myGroup) continue;
+  const q = query(collection(db, COL_RECIPES), where("group","==",state.group));
+  const snap = await getDocs(q);
+  if(snap.empty){
+    groupCardsEl.innerHTML='<div class="vote-info">아직 우리 모둠 카드가 없어요. 잠시 후 새로고침해주세요.</div>';
+    return;
+  }
+  snap.forEach(docSnap=>{
+    const r = docSnap.data();
     const div = document.createElement("div");
-    div.className="group-card"; div.dataset.id=id;
+    div.className="group-card"; div.dataset.id=docSnap.id;
     div.innerHTML = `
-      <div class="gc-name">${r.recipeName} <span style="font-size:11px;color:var(--brown-soft)">(${r.category})</span></div>
-      <div class="gc-recipe">"${r.recipeAction}"</div>
-      <div class="gc-meta">— ${r.name} · 가치 재료: ${r.value}</div>
+      <div class="gc-name">${escapeHtml(r.recipeName)} <span style="font-size:11px;color:var(--brown-soft)">(${escapeHtml(r.category)})</span></div>
+      <div class="gc-recipe">"${escapeHtml(r.recipeAction)}"</div>
+      <div class="gc-meta">— ${escapeHtml(r.name)} · 가치 재료: ${escapeHtml(r.value)}</div>
     `;
     div.addEventListener("click", ()=>{
       groupCardsEl.querySelectorAll(".group-card").forEach(c=>c.classList.remove("selected"));
       div.classList.add("selected");
-      state.voteId = id;
+      state.voteId = docSnap.id;
       document.getElementById("submitVote").disabled=false;
     });
     groupCardsEl.appendChild(div);
-  }
-  if(!groupCardsEl.children.length){
-    groupCardsEl.innerHTML='<div class="vote-info">아직 우리 모둠 카드가 없어요. 잠시 후 새로고침해주세요.</div>';
-  }
+  });
 }
 
 document.getElementById("submitVote").addEventListener("click", async ()=>{
   document.getElementById("submitVote").disabled=true;
   try{
-    await push(ref(db, ROOT+"/votes"), {
+    await addDoc(collection(db, COL_VOTES), {
       group:state.group, recipeId:state.voteId,
-      voterName:state.name, ts:Date.now()
+      voterName:state.name, ts: serverTimestamp()
     });
     gotoStage(6);
   }catch(e){
+    console.error(e);
     toast("투표 오류. 다시 시도해주세요.");
     document.getElementById("submitVote").disabled=false;
   }
 });
+
+function escapeHtml(s){
+  return String(s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
 
 setDot(1);
 </script>

@@ -17,18 +17,17 @@ michelin_guide/
    - 교사 화면: `https://eunnjin-ssam.github.io/michelin_guide/`
    - 학생 화면: `https://eunnjin-ssam.github.io/michelin_guide/student.html`
 
-## 🔥 Firebase 설정 (가장 중요!)
+## 🔥 Firebase Firestore 설정 (가장 중요!)
 
-**4·5월 사이트(`namsan_eats`, `courage_spoon`)와 동일한 Firebase 프로젝트를 그대로 사용합니다.**
+**4·5월 사이트와 동일한 Firebase 프로젝트(Firestore)를 그대로 사용합니다.**
 
 `index.html`과 `student.html` 양쪽 파일에 동일한 `firebaseConfig` 블록이 있습니다.
-4·5월 사이트의 config를 그대로 복사해 7개 `REPLACE_WITH_YOUR_*` 자리에 붙여넣으세요.
+4·5월 사이트의 config를 그대로 복사해 6개 `REPLACE_*` 자리에 붙여넣으세요.
 
 ```javascript
 const firebaseConfig = {
   apiKey: "...",                    // ← 4·5월 사이트와 동일
   authDomain: "...firebaseapp.com",
-  databaseURL: "https://...firebaseio.com",
   projectId: "...",
   storageBucket: "...appspot.com",
   messagingSenderId: "...",
@@ -36,7 +35,44 @@ const firebaseConfig = {
 };
 ```
 
-**데이터 저장 경로**: Firebase 안에 `michelin_guide/` 하위 노드로 자동 분리 저장됩니다. (4·5월 데이터와 섞이지 않음)
+⚠️ **`databaseURL`은 Firestore에서 필요 없으므로 6월 사이트 코드에는 없습니다.**
+
+## 🗂 데이터 저장 경로 (Firestore 컬렉션)
+
+4·5월 데이터와 섞이지 않도록 `michelin_` prefix가 붙은 별도 컬렉션을 씁니다:
+
+| 컬렉션명 | 용도 |
+|---|---|
+| `michelin_recipes` | 학생들이 제출한 행복 레시피 카드 |
+| `michelin_votes` | 모둠 큐레이션 투표 결과 |
+| `michelin_state` | 수업 진행 단계 (문서 id: `current`) |
+
+## 🔒 Firestore 보안 규칙
+
+수업용으로는 다음 규칙이면 충분합니다. (Firebase 콘솔 → Firestore Database → 규칙 탭)
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 4·5월 컬렉션은 기존 규칙 유지
+    // ...
+
+    // 6월 미슐랭 가이드용
+    match /michelin_recipes/{doc} {
+      allow read, write: if true;
+    }
+    match /michelin_votes/{doc} {
+      allow read, write: if true;
+    }
+    match /michelin_state/{doc} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+> 4·5월 사이트의 보안 규칙에 위 3개 컬렉션 규칙만 **추가**하면 됩니다.
 
 ## 📋 수업 진행 순서
 
@@ -64,6 +100,7 @@ const firebaseConfig = {
 ## 🔄 데이터 초기화
 
 수업 시작 전에 교사 화면 첫 페이지의 **'🗑 데이터 초기화'** 버튼으로 이전 데이터 삭제 가능합니다.
+(`michelin_recipes`, `michelin_votes` 컬렉션의 모든 문서를 삭제하고 phase를 `intro`로 리셋)
 
 ## 🎨 디자인
 
@@ -74,5 +111,5 @@ const firebaseConfig = {
 ## 📝 비고
 
 - 모바일 우선 디자인 (학생 디벗)
-- Firebase Realtime Database 사용 (무료 티어로 충분)
+- Firebase **Firestore** 사용 (Realtime Database 아님)
 - 인터넷 연결 필수

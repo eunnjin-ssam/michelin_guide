@@ -274,21 +274,25 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getDatabase, ref, onValue, set, remove, get, child
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  getFirestore, collection, doc, setDoc, getDocs, deleteDoc,
+  onSnapshot, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://REPLACE_WITH_YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "REPLACE_WITH_YOUR_PROJECT",
-  storageBucket: "REPLACE_WITH_YOUR_PROJECT.appspot.com",
-  messagingSenderId: "REPLACE",
-  appId: "REPLACE"
+  apiKey: "AIzaSyALMrsAUydtFCizQoSvdSOqmO1o0pVH6OE",
+  authDomain: "ns3rd-3a5d3.firebaseapp.com",
+  projectId: "ns3rd-3a5d3",
+  storageBucket: "ns3rd-3a5d3.firebasestorage.app",
+  messagingSenderId: "1032550243279",
+  appId: "1:1032550243279:web:1d6d2da4145e6a06c310ba"
 };
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const ROOT = "michelin_guide";
+const db = getFirestore(app);
+
+// Firestore 컬렉션명 (4·5월과 분리)
+const COL_RECIPES = "michelin_recipes";
+const COL_VOTES = "michelin_votes";
+const COL_STATE = "michelin_state";          // 문서 1개: id="current", {phase: "..."}
 
 // --- QR ---
 const studentURL = location.href.replace(/\/[^\/]*$/, "/student.html");
@@ -301,14 +305,16 @@ new QRCode(document.getElementById("publishQR"), {
 });
 
 // --- Phase 전환 ---
-function setPhase(phase){
+async function setPhase(phase){
   document.querySelectorAll(".phase-btn").forEach(b=>{
     b.classList.toggle("active", b.dataset.phase===phase);
   });
   ["intro","collect","curation","publish"].forEach(p=>{
     document.getElementById("panel-"+p).classList.toggle("hide", p!==phase);
   });
-  set(ref(db, ROOT+"/phase"), phase);
+  try{
+    await setDoc(doc(db, COL_STATE, "current"), { phase, updatedAt: serverTimestamp() });
+  }catch(e){ console.error(e); }
 }
 document.querySelectorAll(".phase-btn").forEach(b=>{
   b.addEventListener("click", ()=>setPhase(b.dataset.phase));
@@ -320,26 +326,43 @@ document.querySelectorAll("[data-go]").forEach(b=>{
 // --- 초기화 ---
 document.getElementById("resetAll").addEventListener("click", async ()=>{
   if(!confirm("모든 제출 데이터를 초기화할까요? (수업 시작 전에만 사용)")) return;
-  await remove(ref(db, ROOT+"/recipes"));
-  await remove(ref(db, ROOT+"/votes"));
-  await set(ref(db, ROOT+"/phase"), "intro");
-  alert("초기화 완료!");
+  try{
+    // 모든 recipes 문서 삭제
+    const rsnap = await getDocs(collection(db, COL_RECIPES));
+    for(const d of rsnap.docs){ await deleteDoc(d.ref); }
+    // 모든 votes 문서 삭제
+    const vsnap = await getDocs(collection(db, COL_VOTES));
+    for(const d of vsnap.docs){ await deleteDoc(d.ref); }
+    // phase 초기화
+    await setDoc(doc(db, COL_STATE, "current"), { phase:"intro", updatedAt: serverTimestamp() });
+    alert("초기화 완료!");
+  }catch(e){ console.error(e); alert("초기화 오류: "+e.message); }
 });
 
 // --- 레시피 실시간 ---
 let recipesCache = {};
-onValue(ref(db, ROOT+"/recipes"), snap=>{
-  recipesCache = snap.val() || {};
+onSnapshot(collection(db, COL_RECIPES), snap=>{
+  recipesCache = {};
+  snap.forEach(d=>{ recipesCache[d.id] = d.data(); });
   renderCollect();
   renderCuration();
+  renderPublish();
 });
+
+function tsValue(r){
+  // serverTimestamp가 Timestamp 객체로 들어오는 경우와 아직 null인 경우 대응
+  if(!r.ts) return 0;
+  if(typeof r.ts.toMillis === "function") return r.ts.toMillis();
+  if(r.ts.seconds) return r.ts.seconds*1000;
+  return Number(r.ts)||0;
+}
 
 function renderCollect(){
   const counts = {1:0,2:0,3:0,4:0};
   for(let g=1;g<=4;g++){
     document.querySelector(`#collectGroups [data-g="${g}"]`).innerHTML="";
   }
-  const items = Object.entries(recipesCache).sort((a,b)=>a[1].ts-b[1].ts);
+  const items = Object.entries(recipesCache).sort((a,b)=>tsValue(a[1])-tsValue(b[1]));
   for(const [id, r] of items){
     counts[r.group] = (counts[r.group]||0)+1;
     const col = document.querySelector(`#collectGroups [data-g="${r.group}"]`);
@@ -360,21 +383,20 @@ function renderCollect(){
 
 // --- 투표 실시간 ---
 let votesCache = {};
-onValue(ref(db, ROOT+"/votes"), snap=>{
-  votesCache = snap.val() || {};
+onSnapshot(collection(db, COL_VOTES), snap=>{
+  votesCache = {};
+  snap.forEach(d=>{ votesCache[d.id] = d.data(); });
   renderCuration();
   renderPublish();
 });
 
 function tallyVotes(){
-  // {groupNum: {recipeId: count}}
   const tally = {1:{},2:{},3:{},4:{}};
   for(const id in votesCache){
     const v = votesCache[id];
     if(!tally[v.group]) tally[v.group]={};
     tally[v.group][v.recipeId] = (tally[v.group][v.recipeId]||0)+1;
   }
-  // 모둠별 최다득표 레시피
   const elected = {};
   for(let g=1;g<=4;g++){
     const t = tally[g]; let max=0, winner=null;
@@ -391,11 +413,11 @@ function renderCuration(){
   const {tally, elected} = tallyVotes();
   const voteCounts = {1:0,2:0,3:0,4:0};
   for(const id in votesCache){
-    voteCounts[votesCache[id].group]++;
+    voteCounts[votesCache[id].group] = (voteCounts[votesCache[id].group]||0)+1;
   }
   for(let g=1;g<=4;g++) document.getElementById("v"+g).textContent = voteCounts[g];
 
-  const items = Object.entries(recipesCache).sort((a,b)=>a[1].ts-b[1].ts);
+  const items = Object.entries(recipesCache).sort((a,b)=>tsValue(a[1])-tsValue(b[1]));
   for(const [id, r] of items){
     const col = document.querySelector(`#curationGroups [data-g="${r.group}"]`);
     if(!col) continue;
@@ -447,9 +469,9 @@ function escapeHtml(s){
 }
 
 // 초기 phase 동기화
-onValue(ref(db, ROOT+"/phase"), snap=>{
-  const phase = snap.val()||"intro";
-  // 교사가 직접 클릭한 게 아니더라도 다른 탭에서 바뀌면 반영
+onSnapshot(doc(db, COL_STATE, "current"), snap=>{
+  if(!snap.exists()) return;
+  const phase = snap.data().phase || "intro";
   document.querySelectorAll(".phase-btn").forEach(b=>{
     b.classList.toggle("active", b.dataset.phase===phase);
   });
